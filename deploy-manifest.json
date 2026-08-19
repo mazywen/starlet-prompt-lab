@@ -1,0 +1,17 @@
+{
+  "target": "github-pages",
+  "app": "starlet-prompt-lab",
+  "generatedAt": "2026-08-19T14:02:58.545Z",
+  "modelProvider": "siliconflow",
+  "model": "deepseek-ai/DeepSeek-V3.2",
+  "modules": [
+    "event-box-v2",
+    "fan-love",
+    "persona-mail"
+  ],
+  "apiKeyMode": "browser-session-only",
+  "accessMode": "public-pages-encrypted-login-gate",
+  "baselineStorage": "aes-256-gcm-pbkdf2",
+  "plaintextBaselinePublished": false,
+  "vercelFunctions": false
+}

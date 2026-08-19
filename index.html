@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="data:," />
+  <title>Starlet · Prompt 测试台</title>
+  <link rel="stylesheet" href="./admin/event-box-v2-lab.css" />
+</head>
+<body class="prompt-lab-locked">
+  <section id="authGate" class="auth-gate" aria-labelledby="authTitle">
+    <form id="authForm" class="auth-card" autocomplete="on">
+      <div class="eyebrow">STARLET / PROMPT LAB ACCESS</div>
+      <h1 id="authTitle">进入 Prompt 测试台</h1>
+      <p>GitHub Pages 为公开静态站；历史真实 baseline 使用密码派生密钥加密，验证成功后只在当前页面内解密。</p>
+      <label class="field"><span>账号</span><input id="authUsername" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" /></label>
+      <label class="field"><span>密码</span><input id="authPassword" name="password" type="password" autocomplete="current-password" /></label>
+      <button id="authSubmit" class="primary auth-submit" type="submit">解锁测试台</button>
+      <div id="authError" class="error hidden" role="alert"></div>
+      <div class="auth-note">账号密码不会写入 localStorage；刷新页面后需要重新解锁。</div>
+    </form>
+  </section>
+
+  <header class="event-lab-header">
+    <div>
+      <div class="eyebrow">STARLET / INTERNAL PROMPT LAB</div>
+      <h1>Prompt 测试台</h1>
+      <p>直接复用生产 Prompt 源文件，测试事件箱、粉丝爱意与人设来信。API Key 仅用于本次浏览器 / 本地请求，不写入仓库或服务器配置。</p>
+    </div>
+    <nav class="lab-tabs" aria-label="Prompt 模块">
+      <button id="tabEvent" type="button" class="lab-tab active" data-panel="event">事件箱 v2</button>
+      <button id="tabFanLove" type="button" class="lab-tab" data-panel="fan-love">粉丝爱意</button>
+      <button id="tabPersonaMail" type="button" class="lab-tab" data-panel="persona-mail">人设来信</button>
+    </nav>
+  </header>
+
+  <section id="eventLabPanel" class="lab-panel active" data-panel-name="event">
+    <div class="panel-toolbar">
+      <div><strong>事件箱 v2 · 同输入对比实验</strong><span>固定历史输入和旧版真实输出，只替换新版 Prompt 与工程随机变量。</span></div>
+      <div class="experiment-actions">
+        <button id="assembleBtn" type="button">随机组装</button>
+        <button id="runBtn" type="button">批量生成</button>
+        <button id="runTypesBtn" type="button" class="primary">一键跑 A–E</button>
+      </div>
+    </div>
+
+    <main class="event-lab-shell">
+      <aside class="event-control-rail">
+        <section class="lab-block baseline-picker">
+          <div class="section-kicker">01 / BASELINE</div>
+          <label class="field"><span>历史真实样本（30 条）</span><select id="baselineSelect"></select></label>
+          <div id="baselineMeta" class="meta"></div>
+        </section>
+
+        <section class="lab-block">
+          <div class="section-kicker">02 / COMMON INPUT</div>
+          <label class="field"><span>测试路径</span><select id="testKind"><option value="opening">新开坑 / 换一个</option><option value="sequel">续集</option></select></label>
+          <label class="field"><span>世界模式</span><select id="mode"><option value="daily">Daily 日常</option><option value="celebrity">Celebrity 娱乐圈</option></select></label>
+          <label class="field"><span>随机组装允许 Type</span><input id="allowedTypes" value="A,B,C" /></label>
+          <label class="field"><span>nickname · 用户昵称</span><input id="nickname" placeholder="例如：小温" /></label>
+          <label class="field"><span>gender · 性别</span><select id="gender"><option value="">未提供</option><option value="女">女</option><option value="男">男</option></select></label>
+          <label class="field"><span>bio · 个人简介</span><textarea id="bio" rows="4"></textarea></label>
+          <label class="field"><span>fan_nickname · 粉丝对 TA 的称呼</span><input id="fanNickname" placeholder="例如：温温" /></label>
+          <label class="field"><span>fan_name · 粉丝团名称</span><input id="fanName" placeholder="例如：温度计" /></label>
+          <label class="field"><span>最新 Post / 内容列表（A/B/C 使用）</span><textarea id="latestPost" rows="9"></textarea></label>
+        </section>
+
+        <section class="lab-block occasion-block">
+          <div class="section-kicker">03 / TYPE D · E</div>
+          <p class="field-note">D 以节日证据为主因，可选一条 Post 做辅助个性化；E 只使用生日证据，禁止引用 Post。</p>
+          <label class="field"><span>D / E · 当地日期（服务端证据）</span><input id="occasionDate" type="date" value="2026-08-15" /></label>
+          <label class="field"><span>D · 节日名称</span><input id="holidayName" value="七夕" placeholder="例如：七夕" /></label>
+          <label class="field"><span>D · 节日氛围 / 当天线索</span><textarea id="holidayHint" rows="4">城市商圈都在做七夕限定活动，粉丝开始翻找 TA 说过的理想约会细节。</textarea></label>
+          <label class="check-field"><input id="occasionUseSupportingPost" type="checkbox" /><span><strong>D · 使用 Post 做辅助细节</strong><small>只允许 D 使用；Post 不能成为节日事件的主因</small></span></label>
+          <label class="check-field"><input id="birthdayConfirmed" type="checkbox" checked /><span><strong>E · 确认生日场景</strong><small>确认本轮把当天明确设定为 TA 的生日</small></span></label>
+          <label class="field"><span>Layer 4 · 上一集口吻（用于去重）</span><select id="previousVoiceStyle"><option value="">无上一集口吻</option></select></label>
+        </section>
+
+        <section class="lab-block">
+          <div class="section-kicker">04 / GENERATION</div>
+          <label class="field"><span>批次 Seed</span><input id="batchSeed" value="event-box-v2-test" /></label>
+          <label class="field"><span>普通批量随机组数</span><input id="runCount" type="number" min="1" max="6" value="3" /></label>
+          <label class="field"><span>固定接口</span><input value="硅基流动 · deepseek-ai/DeepSeek-V3.2" readonly /></label>
+          <label class="field"><span>API Key（仅本次请求）</span><input id="apiKey" type="password" autocomplete="off" placeholder="粘贴硅基流动 API Key" /></label>
+          <div class="parameter-pair">
+            <label class="field"><span>Max tokens</span><input id="maxTokens" type="number" min="1" max="65536" value="4096" /></label>
+            <label class="field"><span>Temperature</span><input id="temperature" type="number" min="0" max="2" step="0.1" value="0.7" /></label>
+          </div>
+          <div id="labError" class="error hidden" role="alert"></div>
+        </section>
+      </aside>
+
+      <section class="comparison-stage">
+        <section class="prompt-workbench" aria-labelledby="promptWorkbenchTitle">
+          <div class="result-heading">
+            <div><div class="section-kicker">CURRENT ASSEMBLY</div><h2 id="promptWorkbenchTitle">当前 System / User Prompt</h2></div>
+            <div class="inline-actions">
+              <button id="rebuildCurrentBtn" type="button">重新随机</button>
+              <button id="generateCurrentBtn" type="button" class="primary">用当前 Prompt 生成</button>
+            </div>
+          </div>
+          <div class="prompt-grid">
+            <label class="field"><span>SYSTEM PROMPT（可编辑）</span><textarea id="currentSystemPrompt" rows="18"></textarea></label>
+            <label class="field"><span>USER PROMPT（可编辑）</span><textarea id="currentUserPrompt" rows="18"></textarea></label>
+          </div>
+          <div id="currentPromptMeta" class="meta">正在组装当前 Prompt…</div>
+          <div id="currentPromptOutput" class="current-prompt-output"><div class="experiment-state">修改 Prompt 后可直接生成，结果会显示在这里。</div></div>
+        </section>
+
+        <article class="baseline-output">
+          <div class="result-heading">
+            <div><div class="section-kicker">ORIGINAL</div><h2>原版本真实输出</h2></div>
+            <span id="originalBadge" class="run-badge">baseline</span>
+          </div>
+          <div id="originalOutput" class="event-result"></div>
+          <details class="prompt-disclosure"><summary>查看原版本重建 Prompt</summary><pre id="originalPrompt"></pre></details>
+        </article>
+
+        <div class="stage-divider"><span>同一输入</span><i></i><strong>新版工程组装与输出</strong></div>
+
+        <section>
+          <div class="result-heading">
+            <div><div class="section-kicker">EXPERIMENTS</div><h2>新版本实验结果</h2></div>
+            <span id="batchMeta" class="meta">尚未运行</span>
+          </div>
+          <p class="field-note output-contract">资料槽位：nickname / gender / bio / fan_nickname / fan_name；统一进入 user_profile。Layer 4 叙事口吻进入 recipe、Prompt 和最近一集去重。</p>
+          <div id="experimentList" class="experiment-list"><div class="empty-state">选择历史样本后，可先随机组装 Prompt，或填写 API Key 一键跑 A–E。</div></div>
+        </section>
+      </section>
+    </main>
+  </section>
+
+  <section id="fanLoveLabPanel" class="lab-panel" data-panel-name="fan-love">
+    <div class="panel-toolbar">
+      <div><strong>粉丝爱意 · Post 触发写信</strong><span>输入 Profile + 最近 1–4 条真实 Post；随机风格按生产权重 20 / 40 / 20 / 20。</span></div>
+      <div class="experiment-actions">
+        <button id="fanLoveAssembleBtn" type="button">组装 Prompt</button>
+        <button id="fanLoveGenerateBtn" type="button" class="primary">生成当前风格</button>
+        <button id="fanLoveRunVariantsBtn" type="button">一键跑四风格</button>
+      </div>
+    </div>
+    <main class="letter-lab-shell">
+      <aside class="letter-control-rail">
+        <section class="lab-block">
+          <div class="section-kicker">01 / PROFILE</div>
+          <label class="field"><span>display_name · 用户昵称</span><input id="fanLoveDisplayName" value="小温" /></label>
+          <label class="field"><span>gender</span><select id="fanLoveGender"><option value="">未提供 / TA</option><option value="女">女 / 她</option><option value="男">男 / 他</option></select></label>
+          <label class="field"><span>bio</span><textarea id="fanLoveBio" rows="3">喜欢拍照，也常常记录生活里很小的瞬间。</textarea></label>
+          <label class="field"><span>fan_nickname</span><input id="fanLoveFanNickname" value="温温" /></label>
+          <label class="field"><span>fan_name</span><input id="fanLoveFanName" value="温度计" /></label>
+          <label class="field"><span>long_term_memory · 长期记忆 Profile</span><textarea id="fanLoveMemory" rows="5">她做决定前会想很久，但一旦认定一件事通常会坚持到底；最近在练习更坦然地表达自己的真实感受。</textarea></label>
+        </section>
+        <section class="lab-block">
+          <div class="section-kicker">02 / RECENT 1–4 POSTS</div>
+          <p class="field-note">真实生产只会取当前 Profile 下最近 1–4 条合格 Post。留空的行会被忽略。</p>
+          <div class="post-input-list">
+            <div class="post-input"><input id="fanLovePostId1" value="post-001" aria-label="Post 1 ID" /><textarea id="fanLovePost1" rows="4">今天终于把拖了很久的照片整理完了。发现我还是最喜欢那些没摆好姿势、甚至有点糊的瞬间，反而觉得特别像当时真的活在那里。</textarea></div>
+            <div class="post-input"><input id="fanLovePostId2" value="post-002" aria-label="Post 2 ID" /><textarea id="fanLovePost2" rows="4">下午下雨，本来计划全乱了，后来干脆绕远路走回家。鞋湿透了，但路上买到一家很好吃的小面包店。</textarea></div>
+            <div class="post-input"><input id="fanLovePostId3" value="post-003" aria-label="Post 3 ID" /><textarea id="fanLovePost3" rows="3"></textarea></div>
+            <div class="post-input"><input id="fanLovePostId4" value="post-004" aria-label="Post 4 ID" /><textarea id="fanLovePost4" rows="3"></textarea></div>
+          </div>
+        </section>
+        <section class="lab-block">
+          <div class="section-kicker">03 / STYLE & GENERATION</div>
+          <label class="field"><span>写信风格</span><select id="fanLoveVariant"><option value="">随机（生产权重）</option><option value="energetic">元气应援型 · 40%</option><option value="restrained">克制深情型 · 20%</option><option value="gentle">温柔守护型 · 20%</option><option value="shy">忐忑心动型 · 20%</option></select></label>
+          <label class="field"><span>随机 Seed</span><input id="fanLoveSeed" value="fan-love-lab-001" /></label>
+          <label class="field"><span>API Key（仅本次请求）</span><input id="fanLoveApiKey" type="password" autocomplete="off" placeholder="粘贴硅基流动 API Key" /></label>
+          <div class="parameter-pair">
+            <label class="field"><span>Max tokens</span><input id="fanLoveMaxTokens" type="number" value="520" /></label>
+            <label class="field"><span>Temperature</span><input id="fanLoveTemperature" type="number" min="0" max="2" step="0.01" value="0.62" /></label>
+          </div>
+          <div id="fanLoveError" class="error hidden" role="alert"></div>
+        </section>
+      </aside>
+      <section class="letter-stage">
+        <section class="prompt-workbench letter-workbench">
+          <div class="result-heading">
+            <div><div class="section-kicker">PRODUCTION PROMPT</div><h2>当前粉丝爱意 Prompt</h2></div>
+            <span id="fanLovePromptBadge" class="run-badge">尚未组装</span>
+          </div>
+          <p class="field-note">生产 worker 将整份 Prompt 作为单条 user message 发送。你可直接编辑后生成；解析仍使用生产合同。</p>
+          <label class="field"><span>完整 Prompt（可编辑）</span><textarea id="fanLovePrompt" class="mono-editor" rows="28"></textarea></label>
+          <div id="fanLoveMeta" class="meta"></div>
+          <div id="fanLoveOutput" class="letter-output"><div class="experiment-state">组装 Prompt 后可直接生成。</div></div>
+        </section>
+        <section class="variants-section">
+          <div class="result-heading"><div><div class="section-kicker">FOUR VARIANTS</div><h2>同输入四风格横向对比</h2></div></div>
+          <div id="fanLoveVariantResults" class="variant-grid"><div class="empty-state">点击“一键跑四风格”后，在这里并排比较四套生产 Prompt 的结果。</div></div>
+        </section>
+      </section>
+    </main>
+  </section>
+
+  <section id="personaMailLabPanel" class="lab-panel" data-panel-name="persona-mail">
+    <div class="panel-toolbar">
+      <div><strong>人设来信 · Character 写信</strong><span>私聊关系为主线，public post 只做近期补充；private extension 与基础 voice 冲突时前者优先。</span></div>
+      <div class="experiment-actions">
+        <button id="personaMailAssembleBtn" type="button">组装 Prompt</button>
+        <button id="personaMailGenerateBtn" type="button" class="primary">生成来信</button>
+      </div>
+    </div>
+    <main class="letter-lab-shell">
+      <aside class="letter-control-rail">
+        <section class="lab-block">
+          <div class="section-kicker">01 / CHARACTER</div>
+          <label class="field"><span>display_name</span><input id="personaDisplayName" value="林屿" /></label>
+          <label class="field"><span>setting · 人设原设定</span><textarea id="personaSetting" rows="7">林屿是一个说话不急不慢、观察细致的人。习惯先听完对方再回应，不会用夸张的承诺安慰人，更喜欢从很具体的小事里表达关心。</textarea></label>
+          <label class="field"><span>base_voice_style</span><textarea id="personaBaseVoice" rows="5">句子偏短，语气自然克制，偶尔有一点轻松的反问。很少使用感叹号，不说空泛的大道理。</textarea></label>
+          <label class="field"><span>private_extension · 这段私聊专属追加设定</span><textarea id="personaPrivateExtension" rows="5">在这段关系里会叫用户“小温”。比公开场合稍微直接一点，但仍然不说过度亲密或占有式的话。</textarea></label>
+        </section>
+        <section class="lab-block">
+          <div class="section-kicker">02 / RELATIONSHIP</div>
+          <p class="field-note">每行格式：<code>user: 内容</code> 或 <code>persona: 内容</code>。清空即可测试“无私聊历史”的陌生关系分支。</p>
+          <label class="field"><span>private_turns</span><textarea id="personaPrivateTurns" rows="12">user: 我最近总是把想做的事拖到很晚才开始，明明知道会更累。
+persona: 你不是不知道，只是白天总把精力先给了别的事。今晚别一次补完，先把最小的那一件做掉。
+user: 我昨天真的只整理了十分钟照片，结果居然比想象中轻松。
+persona: 那十分钟已经很有用了。你之前总把“开始”想得太大。</textarea></label>
+          <label class="field"><span>recent_public_post · 可选近期 Post</span><textarea id="personaRecentPost" rows="5">今天终于把拖了很久的照片整理完了。没有全部做完，但好像已经没那么怕打开那个文件夹了。</textarea></label>
+        </section>
+        <section class="lab-block">
+          <div class="section-kicker">03 / GENERATION</div>
+          <label class="field"><span>API Key（仅本次请求）</span><input id="personaMailApiKey" type="password" autocomplete="off" placeholder="粘贴硅基流动 API Key" /></label>
+          <div class="parameter-pair">
+            <label class="field"><span>Max tokens</span><input id="personaMailMaxTokens" type="number" value="760" /></label>
+            <label class="field"><span>Temperature</span><input id="personaMailTemperature" type="number" min="0" max="2" step="0.1" value="0.4" /></label>
+          </div>
+          <div id="personaMailError" class="error hidden" role="alert"></div>
+        </section>
+      </aside>
+      <section class="letter-stage">
+        <section class="prompt-workbench letter-workbench">
+          <div class="result-heading">
+            <div><div class="section-kicker">PRODUCTION PROMPT</div><h2>当前人设来信 Prompt</h2></div>
+            <span id="personaMailPromptBadge" class="run-badge">尚未组装</span>
+          </div>
+          <p class="field-note">生产 worker 同样把整份 Prompt 作为单条 user message 发送；最终输出必须通过 title / preview / 2–5 段正文 / signature 的严格合同。</p>
+          <label class="field"><span>完整 Prompt（可编辑）</span><textarea id="personaMailPrompt" class="mono-editor" rows="32"></textarea></label>
+          <div id="personaMailMeta" class="meta"></div>
+          <div id="personaMailOutput" class="letter-output"><div class="experiment-state">组装 Prompt 后可直接生成。</div></div>
+        </section>
+      </section>
+    </main>
+  </section>
+
+  <script src="./prompt-lab-runtime.bundle.js"></script>
+  <script src="./admin/event-box-v2-lab.js"></script>
+</body>
+</html>
