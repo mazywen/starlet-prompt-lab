@@ -23,6 +23,7 @@ const EVENT_BOX_V2_TYPES = Object.freeze(['A', 'B', 'C', 'D', 'E']);
 const ORDINARY_TYPES = Object.freeze(['A', 'B', 'C']);
 const VOICE_STYLES = Object.freeze(vocabulary.voiceStyles.map((item) => ({ code: item.code, label: item.label, guidance: item.guidance })));
 let baselineCache = null;
+let letterSamplesCache = null;
 let protectedPayloadCache = null;
 
 function bytesFromBase64(value) {
@@ -75,16 +76,20 @@ async function unlock({ username, password } = {}) {
     }, key, bytesFromBase64(payload.ciphertext));
     const parsed = JSON.parse(new TextDecoder().decode(decrypted));
     if (!Array.isArray(parsed?.baselines) || !parsed.baselines.length) throw new Error('baseline payload empty');
+    if (!Array.isArray(parsed?.letterSamples) || !parsed.letterSamples.length) throw new Error('letter sample payload empty');
     baselineCache = parsed.baselines;
-    return { success: true, baselineCount: baselineCache.length };
+    letterSamplesCache = parsed.letterSamples;
+    return { success: true, baselineCount: baselineCache.length, letterSampleCount: letterSamplesCache.length };
   } catch (_error) {
     baselineCache = null;
+    letterSamplesCache = null;
     throw createInputError('账号或密码错误', 'PROMPT_LAB_AUTH_FAILED');
   }
 }
 
 function lock() {
   baselineCache = null;
+  letterSamplesCache = null;
 }
 
 function isUnlocked() {
@@ -282,6 +287,31 @@ async function request(rawUrl, options = {}) {
 
   if (options.method == null || options.method === 'GET') {
     if (path === '/api/health') return { success: true, mode: 'github-pages-static', authRequired: true, unlocked: isUnlocked(), provider: 'siliconflow', baseUrl: EVENT_BOX_V2_BASE_URL, model: EVENT_BOX_V2_MODEL, promptVersion: PROMPT_VERSION, vocabularyVersion: VOCABULARY_VERSION, voiceStyles: VOICE_STYLES };
+    if (path === '/api/letters-real-samples') {
+      if (!isUnlocked()) throw createInputError('Prompt Lab 尚未解锁', 'PROMPT_LAB_LOCKED');
+      const kind = String(url.searchParams.get('kind') || '').trim();
+      const samples = (Array.isArray(letterSamplesCache) ? letterSamplesCache : []).filter((item) => !kind || item.kind === kind);
+      return {
+        success: true,
+        samples: samples.map((item) => ({
+          id: item.lab_id,
+          kind: item.kind,
+          source: item.source || {},
+          profileName: item.input?.profile?.display_name || '',
+          personaName: item.input?.persona?.name || '',
+          postCount: Array.isArray(item.input?.posts) ? item.input.posts.length : 0,
+          privateTurnCount: Array.isArray(item.input?.private_turns) ? item.input.private_turns.length : 0,
+          originalPreview: String(item.original_output || item.historical_output || '').slice(0, 120),
+          hasHistoricalOutput: Boolean(item.original_output || item.historical_output),
+        })),
+      };
+    }
+    if (path === '/api/letters-real-sample') {
+      if (!isUnlocked()) throw createInputError('Prompt Lab 尚未解锁', 'PROMPT_LAB_LOCKED');
+      const sample = (Array.isArray(letterSamplesCache) ? letterSamplesCache : []).find((item) => item.lab_id === url.searchParams.get('id'));
+      if (!sample) throw createInputError('未找到这条真实写信样本', 'LETTER_REAL_SAMPLE_NOT_FOUND');
+      return { success: true, sample };
+    }
     const baselines = await loadBaselines();
     if (path === '/api/event-box-v2/baselines') return { success: true, baselines: baselines.map((item) => ({ id: item.id, sourceKind: item.sourceKind, testKind: item.testKind, mode: item.mode, originalTitle: item.originalOutput?.title || '', postPreview: String(item.latestPost || '').slice(0, 120) })) };
     if (path === '/api/event-box-v2/baseline') {

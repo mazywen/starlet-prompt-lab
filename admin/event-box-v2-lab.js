@@ -4,6 +4,8 @@
   const state = {
     baselines: [], baseline: null, currentAssembly: null,
     fanLoveAssembly: null, personaMailAssembly: null,
+    fanLoveSamples: [], fanLoveSample: null,
+    personaMailSamples: [], personaMailSample: null,
   };
   const byId = (id) => document.getElementById(id);
   const els = {};
@@ -15,9 +17,11 @@
     'fanLoveDisplayName','fanLoveGender','fanLoveBio','fanLoveFanNickname','fanLoveFanName','fanLoveMemory','fanLoveVariant','fanLoveSeed',
     'fanLoveApiKey','fanLoveMaxTokens','fanLoveTemperature','fanLoveAssembleBtn','fanLoveGenerateBtn','fanLoveRunVariantsBtn','fanLovePrompt',
     'fanLovePromptBadge','fanLoveMeta','fanLoveOutput','fanLoveVariantResults','fanLoveError',
+    'fanLoveSampleSelect','fanLoveSampleMeta','fanLoveRealMaterial','fanLoveOriginalOutput',
     'personaDisplayName','personaSetting','personaBaseVoice','personaPrivateExtension','personaPrivateTurns','personaRecentPost','personaMailApiKey',
     'personaMailMaxTokens','personaMailTemperature','personaMailAssembleBtn','personaMailGenerateBtn','personaMailPrompt','personaMailPromptBadge',
     'personaMailMeta','personaMailOutput','personaMailError',
+    'personaMailSampleSelect','personaMailSampleMeta','personaMailRealMaterial','personaMailOriginalOutput',
     'authGate','authForm','authUsername','authPassword','authSubmit','authError',
   ].forEach((id) => { els[id] = byId(id); });
   for (let i = 1; i <= 4; i += 1) {
@@ -259,6 +263,113 @@
     finally { button.disabled = false; button.textContent = restoreText; }
   }
 
+  function renderHistoricalOutput(container, value, emptyText) {
+    if (!container) return;
+    const text = String(value || '').trim();
+    container.textContent = text || emptyText;
+    container.classList.toggle('empty', !text);
+  }
+
+  function renderRealMaterial(container, sample) {
+    if (!container) return;
+    container.textContent = JSON.stringify({ source: sample?.source || null, input: sample?.input || null }, null, 2);
+  }
+
+  function personaTurnsFromRealSample(sample) {
+    const rawTurns = Array.isArray(sample?.input?.private_turns) ? sample.input.private_turns : [];
+    const lines = rawTurns
+      .filter((turn) => String(turn?.content || '').trim())
+      .map((turn) => `${turn.role === 'user' ? 'user' : 'persona'}: ${String(turn.content).trim()}`);
+    const userInput = String(sample?.input?.user_input || '').trim();
+    if (userInput) lines.push(`user: ${userInput}`);
+    return lines.join('\n');
+  }
+
+  async function applyFanLoveRealSample(id) {
+    const data = await apiJson(`/api/letters-real-sample?id=${encodeURIComponent(id)}`);
+    const sample = data.sample;
+    state.fanLoveSample = sample;
+    const profile = sample?.input?.profile || {};
+    const posts = Array.isArray(sample?.input?.posts) ? sample.input.posts.slice(0, 4) : [];
+    els.fanLoveDisplayName.value = profile.display_name || '';
+    els.fanLoveGender.value = profile.gender || '';
+    els.fanLoveBio.value = profile.bio || '';
+    els.fanLoveFanNickname.value = profile.fan_nickname || '';
+    els.fanLoveFanName.value = profile.fan_name || '';
+    els.fanLoveMemory.value = '';
+    for (let index = 1; index <= 4; index += 1) {
+      const post = posts[index - 1] || {};
+      els[`fanLovePostId${index}`].value = post.id || '';
+      els[`fanLovePost${index}`].value = post.content || '';
+    }
+    els.fanLoveSeed.value = `real:${sample.lab_id}`;
+    els.fanLoveSampleMeta.textContent = `${sample.lab_id} ｜ source ${sample?.source?.source_id || '—'} ｜ ${sample?.source?.created_at || '—'} ｜ ${posts.length} 条真实 Post`;
+    renderRealMaterial(els.fanLoveRealMaterial, sample);
+    renderHistoricalOutput(els.fanLoveOriginalOutput, sample.original_output, '这条样本没有原流程输出。');
+    els.fanLoveOutput.innerHTML = '<div class="experiment-state">已切换真实样本；生成后这里显示新版流程输出。</div>';
+    els.fanLoveVariantResults.innerHTML = '<div class="empty-state">可直接用这条真实素材横跑四种风格。</div>';
+    await assembleFanLovePrompt();
+  }
+
+  async function loadFanLoveRealSamples() {
+    const data = await apiJson('/api/letters-real-samples?kind=fan_love');
+    state.fanLoveSamples = data.samples || [];
+    els.fanLoveSampleSelect.innerHTML = '';
+    state.fanLoveSamples.forEach((item, index) => {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = `${String(index + 1).padStart(2, '0')} · ${item.profileName || '未命名'} · ${item.postCount} Post`;
+      els.fanLoveSampleSelect.appendChild(option);
+    });
+    if (state.fanLoveSamples[0]) {
+      els.fanLoveSampleSelect.value = state.fanLoveSamples[0].id;
+      await applyFanLoveRealSample(state.fanLoveSamples[0].id);
+    }
+  }
+
+  async function applyPersonaMailRealSample(id) {
+    const data = await apiJson(`/api/letters-real-sample?id=${encodeURIComponent(id)}`);
+    const sample = data.sample;
+    state.personaMailSample = sample;
+    const input = sample?.input || {};
+    const persona = input.persona || {};
+    els.personaDisplayName.value = persona.name || '';
+    els.personaSetting.value = persona.persona_prompt || '';
+    els.personaBaseVoice.value = persona.speaking_style || '';
+    els.personaPrivateExtension.value = input.private_extension || '';
+    els.personaPrivateTurns.value = personaTurnsFromRealSample(sample);
+    const recentPost = input.recent_post;
+    els.personaRecentPost.value = typeof recentPost === 'string'
+      ? recentPost
+      : (recentPost?.content || recentPost?.user_text || '');
+    const rawTurnCount = Array.isArray(input.private_turns) ? input.private_turns.length : 0;
+    const contentTurnCount = Array.isArray(input.private_turns)
+      ? input.private_turns.filter((turn) => String(turn?.content || '').trim()).length
+      : 0;
+    const injectedUserInput = Boolean(String(input.user_input || '').trim());
+    els.personaMailSampleMeta.textContent = `${sample.lab_id} ｜ ${persona.name || '未命名 Character'} ｜ 导出 private_turns ${rawTurnCount} 条 / 有正文 ${contentTurnCount} 条${injectedUserInput ? ' ｜ user_input 已作为最新 user turn 注入测试' : ''}`;
+    renderRealMaterial(els.personaMailRealMaterial, sample);
+    renderHistoricalOutput(els.personaMailOriginalOutput, sample.historical_output || sample.original_output, '这 15 条 persona_mail 样本在导出文件中没有历史原信输出。');
+    els.personaMailOutput.innerHTML = '<div class="experiment-state">已切换真实样本；生成后这里显示新版人设来信输出。</div>';
+    await assemblePersonaMailPrompt();
+  }
+
+  async function loadPersonaMailRealSamples() {
+    const data = await apiJson('/api/letters-real-samples?kind=persona_mail');
+    state.personaMailSamples = data.samples || [];
+    els.personaMailSampleSelect.innerHTML = '';
+    state.personaMailSamples.forEach((item, index) => {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = `${String(index + 1).padStart(2, '0')} · ${item.personaName || '未命名 Character'} · ${item.privateTurnCount} turns`;
+      els.personaMailSampleSelect.appendChild(option);
+    });
+    if (state.personaMailSamples[0]) {
+      els.personaMailSampleSelect.value = state.personaMailSamples[0].id;
+      await applyPersonaMailRealSample(state.personaMailSamples[0].id);
+    }
+  }
+
   function collectFanLoveInput() {
     const sources = [];
     for (let i = 1; i <= 4; i += 1) {
@@ -266,9 +377,11 @@
       if (!content) continue;
       sources.push({ id: els[`fanLovePostId${i}`].value.trim() || `post-${i}`, content });
     }
+    const baseProfile = state.fanLoveSample?.input?.profile || {};
     return {
       seed: els.fanLoveSeed.value.trim() || 'fan-love-lab', variantId: els.fanLoveVariant.value,
       profile: {
+        ...baseProfile,
         display_name: els.fanLoveDisplayName.value, gender: els.fanLoveGender.value, bio: els.fanLoveBio.value,
         fan_nickname: els.fanLoveFanNickname.value, fan_name: els.fanLoveFanName.value,
         long_term_memory: els.fanLoveMemory.value,
@@ -362,15 +475,23 @@
   }
 
   function collectPersonaInput() {
+    const basePersona = state.personaMailSample?.input?.persona || {};
+    const baseProfile = state.personaMailSample?.input?.profile || {};
+    const source = state.personaMailSample?.source || {};
     return {
+      profile: baseProfile,
       persona: {
-        id: 'prompt-lab-persona', display_name: els.personaDisplayName.value,
-        setting: els.personaSetting.value, base_voice_style: els.personaBaseVoice.value,
+        ...basePersona,
+        id: basePersona.id || 'prompt-lab-persona', display_name: els.personaDisplayName.value,
+        name: els.personaDisplayName.value,
+        setting: els.personaSetting.value, persona_prompt: els.personaSetting.value,
+        base_voice_style: els.personaBaseVoice.value, speaking_style: els.personaBaseVoice.value,
       },
       private_extension: els.personaPrivateExtension.value,
       privateTurns: parsePrivateTurns(els.personaPrivateTurns.value),
       recent_public_post: els.personaRecentPost.value,
-      sessionId: 'prompt-lab-session', threadId: 'prompt-lab-thread',
+      sessionId: source.user_message_id || 'prompt-lab-session',
+      threadId: source.private_thread_id || 'prompt-lab-thread',
     };
   }
 
@@ -442,9 +563,11 @@
     els.runTypesBtn.addEventListener('click', () => runEventEndpoint({ endpoint: '/api/event-box-v2/run-types', button: els.runTypesBtn,
       loadingText: 'A–E 生成中…', emptyText: '正在并行生成 Type A、B、C、D、E…', restoreText: '一键跑 A–E' }));
 
+    els.fanLoveSampleSelect.addEventListener('change', () => applyFanLoveRealSample(els.fanLoveSampleSelect.value).catch((error) => showError(els.fanLoveError, error.message)));
     els.fanLoveAssembleBtn.addEventListener('click', () => assembleFanLovePrompt().catch((error) => showError(els.fanLoveError, error.message)));
     els.fanLoveGenerateBtn.addEventListener('click', generateFanLove);
     els.fanLoveRunVariantsBtn.addEventListener('click', runFanLoveVariants);
+    els.personaMailSampleSelect.addEventListener('change', () => applyPersonaMailRealSample(els.personaMailSampleSelect.value).catch((error) => showError(els.personaMailError, error.message)));
     els.personaMailAssembleBtn.addEventListener('click', () => assemblePersonaMailPrompt().catch((error) => showError(els.personaMailError, error.message)));
     els.personaMailGenerateBtn.addEventListener('click', generatePersonaMail);
     bindApiKeySync();
@@ -501,8 +624,8 @@
     if (['event', 'fan-love', 'persona-mail'].includes(requestedPanel)) activatePanel(requestedPanel);
     const tasks = [
       loadBaselines().catch((error) => showError(els.labError, error.message || 'baseline 加载失败')),
-      assembleFanLovePrompt().catch((error) => showError(els.fanLoveError, error.message || '粉丝爱意 Prompt 组装失败')),
-      assemblePersonaMailPrompt().catch((error) => showError(els.personaMailError, error.message || '人设来信 Prompt 组装失败')),
+      loadFanLoveRealSamples().catch((error) => showError(els.fanLoveError, error.message || '真实粉丝爱意样本加载失败')),
+      loadPersonaMailRealSamples().catch((error) => showError(els.personaMailError, error.message || '真实人设来信样本加载失败')),
     ];
     await Promise.all(tasks);
   }

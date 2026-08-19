@@ -1,7 +1,7 @@
 {
   "target": "github-pages",
   "app": "starlet-prompt-lab",
-  "generatedAt": "2026-08-19T14:02:58.545Z",
+  "generatedAt": "2026-08-19T14:31:13.845Z",
   "modelProvider": "siliconflow",
   "model": "deepseek-ai/DeepSeek-V3.2",
   "modules": [
@@ -12,6 +12,10 @@
   "apiKeyMode": "browser-session-only",
   "accessMode": "public-pages-encrypted-login-gate",
   "baselineStorage": "aes-256-gcm-pbkdf2",
+  "lettersRealInputSource": "outputs/letters-chain-real-inputs-20260819.json",
+  "letterSampleCount": 30,
+  "fanLoveSampleCount": 15,
+  "personaMailSampleCount": 15,
   "plaintextBaselinePublished": false,
   "vercelFunctions": false
 }

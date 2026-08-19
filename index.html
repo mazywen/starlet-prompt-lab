@@ -141,27 +141,32 @@
     </div>
     <main class="letter-lab-shell">
       <aside class="letter-control-rail">
-        <section class="lab-block">
-          <div class="section-kicker">01 / PROFILE</div>
-          <label class="field"><span>display_name · 用户昵称</span><input id="fanLoveDisplayName" value="小温" /></label>
-          <label class="field"><span>gender</span><select id="fanLoveGender"><option value="">未提供 / TA</option><option value="女">女 / 她</option><option value="男">男 / 他</option></select></label>
-          <label class="field"><span>bio</span><textarea id="fanLoveBio" rows="3">喜欢拍照，也常常记录生活里很小的瞬间。</textarea></label>
-          <label class="field"><span>fan_nickname</span><input id="fanLoveFanNickname" value="温温" /></label>
-          <label class="field"><span>fan_name</span><input id="fanLoveFanName" value="温度计" /></label>
-          <label class="field"><span>long_term_memory · 长期记忆 Profile</span><textarea id="fanLoveMemory" rows="5">她做决定前会想很久，但一旦认定一件事通常会坚持到底；最近在练习更坦然地表达自己的真实感受。</textarea></label>
+        <section class="lab-block real-sample-picker">
+          <div class="section-kicker">01 / REAL PRODUCTION SAMPLE</div>
+          <label class="field"><span>真实粉丝爱意样本（15 条）</span><select id="fanLoveSampleSelect"></select></label>
+          <div id="fanLoveSampleMeta" class="meta"></div>
         </section>
         <section class="lab-block">
-          <div class="section-kicker">02 / RECENT 1–4 POSTS</div>
+          <div class="section-kicker">02 / PROFILE</div>
+          <label class="field"><span>display_name · 用户昵称</span><input id="fanLoveDisplayName" /></label>
+          <label class="field"><span>gender</span><select id="fanLoveGender"><option value="">未提供 / TA</option><option value="女">女 / 她</option><option value="男">男 / 他</option></select></label>
+          <label class="field"><span>bio</span><textarea id="fanLoveBio" rows="3"></textarea></label>
+          <label class="field"><span>fan_nickname</span><input id="fanLoveFanNickname" /></label>
+          <label class="field"><span>fan_name</span><input id="fanLoveFanName" /></label>
+          <label class="field"><span>long_term_memory · 长期记忆 Profile</span><textarea id="fanLoveMemory" rows="5" placeholder="真实样本文件没有长期记忆时保持为空"></textarea></label>
+        </section>
+        <section class="lab-block">
+          <div class="section-kicker">03 / RECENT 1–4 POSTS</div>
           <p class="field-note">真实生产只会取当前 Profile 下最近 1–4 条合格 Post。留空的行会被忽略。</p>
           <div class="post-input-list">
-            <div class="post-input"><input id="fanLovePostId1" value="post-001" aria-label="Post 1 ID" /><textarea id="fanLovePost1" rows="4">今天终于把拖了很久的照片整理完了。发现我还是最喜欢那些没摆好姿势、甚至有点糊的瞬间，反而觉得特别像当时真的活在那里。</textarea></div>
-            <div class="post-input"><input id="fanLovePostId2" value="post-002" aria-label="Post 2 ID" /><textarea id="fanLovePost2" rows="4">下午下雨，本来计划全乱了，后来干脆绕远路走回家。鞋湿透了，但路上买到一家很好吃的小面包店。</textarea></div>
-            <div class="post-input"><input id="fanLovePostId3" value="post-003" aria-label="Post 3 ID" /><textarea id="fanLovePost3" rows="3"></textarea></div>
-            <div class="post-input"><input id="fanLovePostId4" value="post-004" aria-label="Post 4 ID" /><textarea id="fanLovePost4" rows="3"></textarea></div>
+            <div class="post-input"><input id="fanLovePostId1" aria-label="Post 1 ID" /><textarea id="fanLovePost1" rows="4"></textarea></div>
+            <div class="post-input"><input id="fanLovePostId2" aria-label="Post 2 ID" /><textarea id="fanLovePost2" rows="4"></textarea></div>
+            <div class="post-input"><input id="fanLovePostId3" aria-label="Post 3 ID" /><textarea id="fanLovePost3" rows="3"></textarea></div>
+            <div class="post-input"><input id="fanLovePostId4" aria-label="Post 4 ID" /><textarea id="fanLovePost4" rows="3"></textarea></div>
           </div>
         </section>
         <section class="lab-block">
-          <div class="section-kicker">03 / STYLE & GENERATION</div>
+          <div class="section-kicker">04 / STYLE & GENERATION</div>
           <label class="field"><span>写信风格</span><select id="fanLoveVariant"><option value="">随机（生产权重）</option><option value="energetic">元气应援型 · 40%</option><option value="restrained">克制深情型 · 20%</option><option value="gentle">温柔守护型 · 20%</option><option value="shy">忐忑心动型 · 20%</option></select></label>
           <label class="field"><span>随机 Seed</span><input id="fanLoveSeed" value="fan-love-lab-001" /></label>
           <label class="field"><span>API Key（仅本次请求）</span><input id="fanLoveApiKey" type="password" autocomplete="off" placeholder="粘贴硅基流动 API Key" /></label>
@@ -173,6 +178,13 @@
         </section>
       </aside>
       <section class="letter-stage">
+        <section class="real-sample-comparison">
+          <div class="result-heading"><div><div class="section-kicker">REAL BASELINE</div><h2>真实素材与原流程输出</h2></div><span class="run-badge">production 2026-08-19</span></div>
+          <div class="real-baseline-grid">
+            <article class="baseline-data-card"><h3>真实输入素材</h3><pre id="fanLoveRealMaterial" class="real-material"></pre></article>
+            <article class="baseline-data-card"><h3>原流程输出</h3><div id="fanLoveOriginalOutput" class="historical-output"></div></article>
+          </div>
+        </section>
         <section class="prompt-workbench letter-workbench">
           <div class="result-heading">
             <div><div class="section-kicker">PRODUCTION PROMPT</div><h2>当前粉丝爱意 Prompt</h2></div>
@@ -201,24 +213,26 @@
     </div>
     <main class="letter-lab-shell">
       <aside class="letter-control-rail">
-        <section class="lab-block">
-          <div class="section-kicker">01 / CHARACTER</div>
-          <label class="field"><span>display_name</span><input id="personaDisplayName" value="林屿" /></label>
-          <label class="field"><span>setting · 人设原设定</span><textarea id="personaSetting" rows="7">林屿是一个说话不急不慢、观察细致的人。习惯先听完对方再回应，不会用夸张的承诺安慰人，更喜欢从很具体的小事里表达关心。</textarea></label>
-          <label class="field"><span>base_voice_style</span><textarea id="personaBaseVoice" rows="5">句子偏短，语气自然克制，偶尔有一点轻松的反问。很少使用感叹号，不说空泛的大道理。</textarea></label>
-          <label class="field"><span>private_extension · 这段私聊专属追加设定</span><textarea id="personaPrivateExtension" rows="5">在这段关系里会叫用户“小温”。比公开场合稍微直接一点，但仍然不说过度亲密或占有式的话。</textarea></label>
+        <section class="lab-block real-sample-picker">
+          <div class="section-kicker">01 / REAL PRODUCTION SAMPLE</div>
+          <label class="field"><span>真实人设来信样本（15 条）</span><select id="personaMailSampleSelect"></select></label>
+          <div id="personaMailSampleMeta" class="meta"></div>
         </section>
         <section class="lab-block">
-          <div class="section-kicker">02 / RELATIONSHIP</div>
+          <div class="section-kicker">02 / CHARACTER</div>
+          <label class="field"><span>display_name</span><input id="personaDisplayName" /></label>
+          <label class="field"><span>setting · 人设原设定</span><textarea id="personaSetting" rows="7"></textarea></label>
+          <label class="field"><span>base_voice_style</span><textarea id="personaBaseVoice" rows="5"></textarea></label>
+          <label class="field"><span>private_extension · 这段私聊专属追加设定</span><textarea id="personaPrivateExtension" rows="5"></textarea></label>
+        </section>
+        <section class="lab-block">
+          <div class="section-kicker">03 / RELATIONSHIP</div>
           <p class="field-note">每行格式：<code>user: 内容</code> 或 <code>persona: 内容</code>。清空即可测试“无私聊历史”的陌生关系分支。</p>
-          <label class="field"><span>private_turns</span><textarea id="personaPrivateTurns" rows="12">user: 我最近总是把想做的事拖到很晚才开始，明明知道会更累。
-persona: 你不是不知道，只是白天总把精力先给了别的事。今晚别一次补完，先把最小的那一件做掉。
-user: 我昨天真的只整理了十分钟照片，结果居然比想象中轻松。
-persona: 那十分钟已经很有用了。你之前总把“开始”想得太大。</textarea></label>
-          <label class="field"><span>recent_public_post · 可选近期 Post</span><textarea id="personaRecentPost" rows="5">今天终于把拖了很久的照片整理完了。没有全部做完，但好像已经没那么怕打开那个文件夹了。</textarea></label>
+          <label class="field"><span>private_turns</span><textarea id="personaPrivateTurns" rows="12"></textarea></label>
+          <label class="field"><span>recent_public_post · 可选近期 Post</span><textarea id="personaRecentPost" rows="5"></textarea></label>
         </section>
         <section class="lab-block">
-          <div class="section-kicker">03 / GENERATION</div>
+          <div class="section-kicker">04 / GENERATION</div>
           <label class="field"><span>API Key（仅本次请求）</span><input id="personaMailApiKey" type="password" autocomplete="off" placeholder="粘贴硅基流动 API Key" /></label>
           <div class="parameter-pair">
             <label class="field"><span>Max tokens</span><input id="personaMailMaxTokens" type="number" value="760" /></label>
@@ -228,6 +242,13 @@ persona: 那十分钟已经很有用了。你之前总把“开始”想得太�
         </section>
       </aside>
       <section class="letter-stage">
+        <section class="real-sample-comparison">
+          <div class="result-heading"><div><div class="section-kicker">REAL BASELINE</div><h2>真实素材与历史输出</h2></div></div>
+          <div class="real-baseline-grid">
+            <article class="baseline-data-card"><h3>真实输入素材</h3><pre id="personaMailRealMaterial" class="real-material"></pre></article>
+            <article class="baseline-data-card"><h3>历史原信输出</h3><div id="personaMailOriginalOutput" class="historical-output"></div></article>
+          </div>
+        </section>
         <section class="prompt-workbench letter-workbench">
           <div class="result-heading">
             <div><div class="section-kicker">PRODUCTION PROMPT</div><h2>当前人设来信 Prompt</h2></div>
