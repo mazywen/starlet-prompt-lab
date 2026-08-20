@@ -18,7 +18,7 @@
     'fanLoveApiKey','fanLoveMaxTokens','fanLoveTemperature','fanLoveAssembleBtn','fanLoveGenerateBtn','fanLoveRunVariantsBtn','fanLovePrompt',
     'fanLovePromptBadge','fanLoveMeta','fanLoveOutput','fanLoveVariantResults','fanLoveError',
     'fanLoveSampleSelect','fanLoveSampleMeta','fanLoveRealMaterial','fanLoveOriginalOutput',
-    'personaDisplayName','personaSetting','personaBaseVoice','personaPrivateExtension','personaPrivateTurns','personaRecentPost','personaMailApiKey',
+    'personaDisplayName','personaSetting','personaBaseVoice','personaPrivateExtension','personaPrivateTurns','personaRecentPost','personaMailScenario','personaMailApiKey',
     'personaMailMaxTokens','personaMailTemperature','personaMailAssembleBtn','personaMailGenerateBtn','personaMailPrompt','personaMailPromptBadge',
     'personaMailMeta','personaMailOutput','personaMailError',
     'personaMailSampleSelect','personaMailSampleMeta','personaMailRealMaterial','personaMailOriginalOutput',
@@ -346,6 +346,7 @@
     els.personaBaseVoice.value = persona.speaking_style || '';
     els.personaPrivateExtension.value = input.private_extension || '';
     els.personaPrivateTurns.value = personaTurnsFromRealSample(sample);
+    els.personaMailScenario.value = Array.isArray(input.private_turns) && input.private_turns.length ? 'recent_chat' : 'first_letter';
     const recentPost = input.recent_post;
     els.personaRecentPost.value = typeof recentPost === 'string'
       ? recentPost
@@ -506,8 +507,8 @@
     const data = await postJson('/api/persona-mail/assemble', { input: collectPersonaInput() });
     state.personaMailAssembly = data.assembly;
     els.personaMailPrompt.value = data.assembly.prompt;
-    els.personaMailPromptBadge.textContent = `${data.assembly.persona.displayName} · ${data.assembly.relationship.privateTurns.length} turns`;
-    els.personaMailMeta.textContent = `${data.assembly.relationship.privateTurns.length ? '已有私聊关系' : '无私聊历史'} ｜ ${data.assembly.recentPost ? '含 recent public post' : '无 public post'} ｜ private extension: ${data.assembly.persona.privateExtension ? 'yes' : 'no'} ｜ production: ${data.assembly.generation.maxTokens} / temp ${data.assembly.generation.temperature}`;
+    els.personaMailPromptBadge.textContent = `${data.assembly.persona.displayName} · ${data.assembly.scenario.label}`;
+    els.personaMailMeta.textContent = `${data.assembly.scenario.label} ｜ ${data.assembly.relationship.privateTurns.length} turns ｜ ${data.assembly.recentPost ? '含 recent public post' : '无 public post'} ｜ private extension: ${data.assembly.persona.privateExtension ? 'yes' : 'no'} ｜ production: ${data.assembly.generation.maxTokens} / temp ${data.assembly.generation.temperature}`;
     return data.assembly;
   }
 
