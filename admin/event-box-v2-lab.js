@@ -14,7 +14,7 @@
     'occasionDate','holidayName','holidayHint','occasionUseSupportingPost','birthdayConfirmed','previousVoiceStyle','batchSeed','runCount','apiKey',
     'maxTokens','temperature','assembleBtn','runBtn','runTypesBtn','rebuildCurrentBtn','generateCurrentBtn','currentSystemPrompt','currentUserPrompt',
     'currentPromptMeta','currentPromptOutput','labError','originalBadge','originalOutput','originalPrompt','batchMeta','experimentList',
-    'fanLoveDisplayName','fanLoveGender','fanLoveBio','fanLoveFanNickname','fanLoveFanName','fanLoveMemory','fanLoveVariant','fanLoveSeed',
+    'fanLoveNickname','fanLoveVariant','fanLoveSeed',
     'fanLoveApiKey','fanLoveMaxTokens','fanLoveTemperature','fanLoveAssembleBtn','fanLoveGenerateBtn','fanLoveRunVariantsBtn','fanLovePrompt',
     'fanLovePromptBadge','fanLoveMeta','fanLoveOutput','fanLoveVariantResults','fanLoveError',
     'fanLoveSampleSelect','fanLoveSampleMeta','fanLoveRealMaterial','fanLoveOriginalOutput',
@@ -24,11 +24,10 @@
     'personaMailSampleSelect','personaMailSampleMeta','personaMailRealMaterial','personaMailOriginalOutput',
     'authGate','authForm','authUsername','authPassword','authSubmit','authError',
   ].forEach((id) => { els[id] = byId(id); });
-  for (let i = 1; i <= 4; i += 1) {
+  for (let i = 1; i <= 3; i += 1) {
     els[`fanLovePostId${i}`] = byId(`fanLovePostId${i}`);
     els[`fanLovePost${i}`] = byId(`fanLovePost${i}`);
   }
-
   async function apiJson(url, options = {}) {
     if (window.StarletPromptLabRuntime?.request && String(url).includes('/api/')) {
       return window.StarletPromptLabRuntime.request(url, options);
@@ -290,21 +289,30 @@
     const sample = data.sample;
     state.fanLoveSample = sample;
     const profile = sample?.input?.profile || {};
-    const posts = Array.isArray(sample?.input?.posts) ? sample.input.posts.slice(0, 4) : [];
-    els.fanLoveDisplayName.value = profile.display_name || '';
-    els.fanLoveGender.value = profile.gender || '';
-    els.fanLoveBio.value = profile.bio || '';
-    els.fanLoveFanNickname.value = profile.fan_nickname || '';
-    els.fanLoveFanName.value = profile.fan_name || '';
-    els.fanLoveMemory.value = '';
-    for (let index = 1; index <= 4; index += 1) {
+    const posts = Array.isArray(sample?.input?.posts) ? sample.input.posts.slice(0, 3) : [];
+    const nicknameAndInfo = [
+      profile.display_name,
+      profile.gender ? `性别：${profile.gender}` : '',
+      profile.bio ? `简介：${profile.bio}` : '',
+      profile.fan_nickname ? `粉丝称呼：${profile.fan_nickname}` : '',
+      profile.fan_name ? `粉丝团：${profile.fan_name}` : '',
+    ].filter(Boolean).join('\n');
+    els.fanLoveNickname.value = nicknameAndInfo;
+    for (let index = 1; index <= 3; index += 1) {
       const post = posts[index - 1] || {};
       els[`fanLovePostId${index}`].value = post.id || '';
       els[`fanLovePost${index}`].value = post.content || '';
     }
     els.fanLoveSeed.value = `real:${sample.lab_id}`;
-    els.fanLoveSampleMeta.textContent = `${sample.lab_id} ｜ source ${sample?.source?.source_id || '—'} ｜ ${sample?.source?.created_at || '—'} ｜ ${posts.length} 条真实 Post`;
-    renderRealMaterial(els.fanLoveRealMaterial, sample);
+    els.fanLoveSampleMeta.textContent = `${sample.lab_id} ｜ source ${sample?.source?.source_id || '—'} ｜ ${sample?.source?.created_at || '—'} ｜ 已载入 ${posts.length} 条真实 Post`;
+    renderRealMaterial(els.fanLoveRealMaterial, {
+      source: sample?.source || null,
+      input: {
+        nickname: nicknameAndInfo,
+        post_content: posts.map((post, index) => `【帖子 ${index + 1}｜${post.id || `post-${index + 1}`}】\n${post.content || ''}`).join('\n\n'),
+        posts,
+      },
+    });
     renderHistoricalOutput(els.fanLoveOriginalOutput, sample.original_output, '这条样本没有原流程输出。');
     els.fanLoveOutput.innerHTML = '<div class="experiment-state">已切换真实样本；生成后这里显示新版流程输出。</div>';
     els.fanLoveVariantResults.innerHTML = '<div class="empty-state">可直接用这条真实素材横跑四种风格。</div>';
@@ -371,21 +379,19 @@
   }
 
   function collectFanLoveInput() {
+    const nickname = els.fanLoveNickname.value.trim();
     const sources = [];
-    for (let i = 1; i <= 4; i += 1) {
-      const content = els[`fanLovePost${i}`].value.trim();
+    for (let index = 1; index <= 3; index += 1) {
+      const content = els[`fanLovePost${index}`].value.trim();
       if (!content) continue;
-      sources.push({ id: els[`fanLovePostId${i}`].value.trim() || `post-${i}`, content });
+      sources.push({ id: els[`fanLovePostId${index}`].value.trim() || `post-${index}`, content });
     }
-    const baseProfile = state.fanLoveSample?.input?.profile || {};
+    const postContent = sources.map((source, index) => `【帖子 ${index + 1}｜${source.id}】\n${source.content}`).join('\n\n');
     return {
       seed: els.fanLoveSeed.value.trim() || 'fan-love-lab', variantId: els.fanLoveVariant.value,
-      profile: {
-        ...baseProfile,
-        display_name: els.fanLoveDisplayName.value, gender: els.fanLoveGender.value, bio: els.fanLoveBio.value,
-        fan_nickname: els.fanLoveFanNickname.value, fan_name: els.fanLoveFanName.value,
-        long_term_memory: els.fanLoveMemory.value,
-      },
+      nickname,
+      postContent,
+      profile: { display_name: nickname },
       sources,
     };
   }
@@ -411,7 +417,7 @@
         card.appendChild(element('p', 'fan-love-text', value.reason || '素材不足'));
       } else {
         card.appendChild(element('p', 'fan-love-text', value.text));
-        card.appendChild(element('div', 'meta result-meta', `evidence: ${(value.evidencePostIds || []).join(', ')} ｜ multiple: ${String(value.basedOnMultiplePosts)}`));
+        card.appendChild(element('div', 'meta result-meta', `evidence: ${(value.evidencePostIds || []).join(', ')}`));
       }
       card.appendChild(element('div', 'contract-pass', '✓ 已通过生产 fanLoveWritingContract 输出校验'));
       container.appendChild(card);
@@ -444,7 +450,7 @@
     showError(els.fanLoveError, '');
     if (!els.fanLoveApiKey.value.trim()) { showError(els.fanLoveError, '请先填写硅基流动 API Key'); els.fanLoveApiKey.focus(); return; }
     const button = els.fanLoveRunVariantsBtn; const idle = button.textContent; button.disabled = true; button.textContent = '四风格生成中…';
-    els.fanLoveVariantResults.innerHTML = '<div class="empty-state">同一组 Profile / Post 正在并行跑四套生产 Prompt…</div>';
+    els.fanLoveVariantResults.innerHTML = '<div class="empty-state">同一组昵称及相关信息 / 最近 3 条 Post 正在并行跑四套生产 Prompt…</div>';
     try {
       const data = await postJson('/api/fan-love/run-variants', {
         apiKey: els.fanLoveApiKey.value.trim(), input: collectFanLoveInput(),
