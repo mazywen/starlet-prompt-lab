@@ -2308,7 +2308,7 @@ function buildPersonaMailPrompt({ relationship = {}, recentPost = null, persona,
     '',
     '# 内容要求',
     '- 只围绕当前情境中最自然的一个中心主题写，不要总结整段输入。',
-    '- 正文 180–450 个中文字符，分 2–5 个自然段',
+    '- 正文控制在 180–800 个中文字符，分 2–5 个自然段；不要为了凑字数重复聊天内容。',
     '- 开头要具体，结尾要自然收束；不要输出分析、标签或解释。',
     '- 禁止编造输入中不存在的现实事实；不要逐字大段复制聊天原话。',
     '- 禁止声称真实见面、真实寄送、线下行为、真人身份或品牌承诺',
@@ -2361,7 +2361,7 @@ function parsePersonaMailOutput(value, { persona }) {
   }
 
   const body = paragraphs.join('\n\n');
-  if (codePointLength(body) < 180 || codePointLength(body) > 450) {
+  if (codePointLength(body) < 180 || codePointLength(body) > 800) {
     throw createContractError('人设来信正文长度不符合合同', 'PERSONA_MAIL_INVALID_OUTPUT', 'body_length');
   }
   if (FORBIDDEN_PATTERNS.some((pattern) => pattern.test(`${title}\n${preview}\n${body}`))) {
