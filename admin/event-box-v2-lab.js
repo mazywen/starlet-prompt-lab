@@ -3,7 +3,7 @@
 
   const state = {
     baselines: [], baseline: null, currentAssembly: null,
-    fanLoveAssembly: null, fanLoveVariants: [], fanLoveVariantEdits: {}, fanLoveVariantResults: {}, fanLoveSelectedVariantId: '', personaMailAssembly: null,
+    fanLoveAssembly: null, personaMailAssembly: null,
     fanLoveSamples: [], fanLoveSample: null,
     personaMailSamples: [], personaMailSample: null,
   };
@@ -14,20 +14,21 @@
     'occasionDate','holidayName','holidayHint','occasionUseSupportingPost','birthdayConfirmed','previousVoiceStyle','batchSeed','runCount','apiKey',
     'maxTokens','temperature','assembleBtn','runBtn','runTypesBtn','rebuildCurrentBtn','generateCurrentBtn','currentSystemPrompt','currentUserPrompt',
     'currentPromptMeta','currentPromptOutput','labError','originalBadge','originalOutput','originalPrompt','batchMeta','experimentList',
-    'fanLoveNickname','fanLoveSeed',
-    'fanLoveApiKey','fanLoveMaxTokens','fanLoveTemperature','fanLoveAssembleBtn','fanLoveGenerateBtn','fanLoveRunVariantsBtn',
-    'fanLovePromptBadge','fanLoveMeta','fanLoveOutput','fanLoveVariantPromptGrid','fanLoveError',
+    'fanLoveDisplayName','fanLoveGender','fanLoveBio','fanLoveFanNickname','fanLoveFanName','fanLoveMemory','fanLoveVariant','fanLoveSeed',
+    'fanLoveApiKey','fanLoveMaxTokens','fanLoveTemperature','fanLoveAssembleBtn','fanLoveGenerateBtn','fanLoveRunVariantsBtn','fanLovePrompt',
+    'fanLovePromptBadge','fanLoveMeta','fanLoveOutput','fanLoveVariantResults','fanLoveError',
     'fanLoveSampleSelect','fanLoveSampleMeta','fanLoveRealMaterial','fanLoveOriginalOutput',
-    'personaDisplayName','personaSetting','personaBaseVoice','personaPrivateExtension','personaPrivateTurns','personaRecentPost','personaMailScenario','personaMailApiKey',
+    'personaDisplayName','personaSetting','personaBaseVoice','personaPrivateExtension','personaPrivateTurns','personaRecentPost','personaMailApiKey',
     'personaMailMaxTokens','personaMailTemperature','personaMailAssembleBtn','personaMailGenerateBtn','personaMailPrompt','personaMailPromptBadge',
-    'personaMailMeta','personaMailOutput','personaMailOriginalPrompt','personaMailError',
+    'personaMailMeta','personaMailOutput','personaMailError',
     'personaMailSampleSelect','personaMailSampleMeta','personaMailRealMaterial','personaMailOriginalOutput',
     'authGate','authForm','authUsername','authPassword','authSubmit','authError',
   ].forEach((id) => { els[id] = byId(id); });
-  for (let i = 1; i <= 3; i += 1) {
+  for (let i = 1; i <= 4; i += 1) {
     els[`fanLovePostId${i}`] = byId(`fanLovePostId${i}`);
     els[`fanLovePost${i}`] = byId(`fanLovePost${i}`);
   }
+
   async function apiJson(url, options = {}) {
     if (window.StarletPromptLabRuntime?.request && String(url).includes('/api/')) {
       return window.StarletPromptLabRuntime.request(url, options);
@@ -289,33 +290,25 @@
     const sample = data.sample;
     state.fanLoveSample = sample;
     const profile = sample?.input?.profile || {};
-    const posts = Array.isArray(sample?.input?.posts) ? sample.input.posts.slice(0, 3) : [];
-    const nicknameAndInfo = [
-      profile.display_name,
-      profile.gender ? `性别：${profile.gender}` : '',
-      profile.bio ? `简介：${profile.bio}` : '',
-      profile.fan_nickname ? `粉丝称呼：${profile.fan_nickname}` : '',
-      profile.fan_name ? `粉丝团：${profile.fan_name}` : '',
-    ].filter(Boolean).join('\n');
-    els.fanLoveNickname.value = nicknameAndInfo;
-    for (let index = 1; index <= 3; index += 1) {
+    const posts = Array.isArray(sample?.input?.posts) ? sample.input.posts.slice(0, 4) : [];
+    els.fanLoveDisplayName.value = profile.display_name || '';
+    els.fanLoveGender.value = profile.gender || '';
+    els.fanLoveBio.value = profile.bio || '';
+    els.fanLoveFanNickname.value = profile.fan_nickname || '';
+    els.fanLoveFanName.value = profile.fan_name || '';
+    els.fanLoveMemory.value = '';
+    for (let index = 1; index <= 4; index += 1) {
       const post = posts[index - 1] || {};
       els[`fanLovePostId${index}`].value = post.id || '';
       els[`fanLovePost${index}`].value = post.content || '';
     }
     els.fanLoveSeed.value = `real:${sample.lab_id}`;
-    els.fanLoveSampleMeta.textContent = `${sample.lab_id} ｜ source ${sample?.source?.source_id || '—'} ｜ ${sample?.source?.created_at || '—'} ｜ 已载入 ${posts.length} 条真实 Post`;
-    renderRealMaterial(els.fanLoveRealMaterial, {
-      source: sample?.source || null,
-      input: {
-        nickname: nicknameAndInfo,
-        post_content: posts.map((post, index) => `【帖子 ${index + 1}｜${post.id || `post-${index + 1}`}】\n${post.content || ''}`).join('\n\n'),
-        posts,
-      },
-    });
+    els.fanLoveSampleMeta.textContent = `${sample.lab_id} ｜ source ${sample?.source?.source_id || '—'} ｜ ${sample?.source?.created_at || '—'} ｜ ${posts.length} 条真实 Post`;
+    renderRealMaterial(els.fanLoveRealMaterial, sample);
     renderHistoricalOutput(els.fanLoveOriginalOutput, sample.original_output, '这条样本没有原流程输出。');
-    els.fanLoveOutput.innerHTML = '<div class="experiment-state">已切换真实样本；可直接编辑四张 Prompt 卡片。</div>';
-    await assembleFanLoveVariants();
+    els.fanLoveOutput.innerHTML = '<div class="experiment-state">已切换真实样本；生成后这里显示新版流程输出。</div>';
+    els.fanLoveVariantResults.innerHTML = '<div class="empty-state">可直接用这条真实素材横跑四种风格。</div>';
+    await assembleFanLovePrompt();
   }
 
   async function loadFanLoveRealSamples() {
@@ -345,7 +338,6 @@
     els.personaBaseVoice.value = persona.speaking_style || '';
     els.personaPrivateExtension.value = input.private_extension || '';
     els.personaPrivateTurns.value = personaTurnsFromRealSample(sample);
-    els.personaMailScenario.value = Array.isArray(input.private_turns) && input.private_turns.length ? 'recent_chat' : 'first_letter';
     const recentPost = input.recent_post;
     els.personaRecentPost.value = typeof recentPost === 'string'
       ? recentPost
@@ -378,111 +370,39 @@
     }
   }
 
-  const FAN_LOVE_VARIANT_IDS = ['restrained', 'energetic', 'gentle', 'shy'];
-
   function collectFanLoveInput() {
-    const nickname = els.fanLoveNickname.value.trim();
     const sources = [];
-    for (let index = 1; index <= 3; index += 1) {
-      const content = els[`fanLovePost${index}`].value.trim();
+    const samplePosts = Array.isArray(state.fanLoveSample?.input?.posts)
+      ? state.fanLoveSample.input.posts
+      : [];
+    for (let i = 1; i <= 4; i += 1) {
+      const content = els[`fanLovePost${i}`].value.trim();
       if (!content) continue;
-      sources.push({ id: els[`fanLovePostId${index}`].value.trim() || `post-${index}`, content });
+      const id = els[`fanLovePostId${i}`].value.trim() || `post-${i}`;
+      const original = samplePosts.find((post) => String(post?.id || '') === id) || {};
+      sources.push({ ...original, id, content });
     }
-    const postContent = sources.map((source, index) => `【帖子 ${index + 1}｜${source.id}】\n${source.content}`).join('\n\n');
+    const baseProfile = state.fanLoveSample?.input?.profile || {};
     return {
-      seed: els.fanLoveSeed.value.trim() || 'fan-love-lab',
-      nickname,
-      postContent,
-      profile: { display_name: nickname },
+      seed: els.fanLoveSeed.value.trim() || 'fan-love-lab', variantId: els.fanLoveVariant.value,
+      profile: {
+        ...baseProfile,
+        display_name: els.fanLoveDisplayName.value, gender: els.fanLoveGender.value, bio: els.fanLoveBio.value,
+        fan_nickname: els.fanLoveFanNickname.value, fan_name: els.fanLoveFanName.value,
+        long_term_memory: els.fanLoveMemory.value,
+      },
       sources,
     };
   }
 
-  function fanLoveVariantCard(variantId) {
-    return els.fanLoveVariantPromptGrid?.querySelector(`[data-fan-love-variant="${variantId}"]`) || null;
-  }
-
-  function updateFanLoveVariantBadge(variantId) {
-    const card = fanLoveVariantCard(variantId);
-    const assembly = state.fanLoveVariants.find((item) => item.variant.id === variantId);
-    if (!card || !assembly) return;
-    const badge = card.querySelector('[data-fan-love-edited-badge]');
-    const edited = state.fanLoveVariantEdits[variantId] !== assembly.prompt;
-    badge.textContent = edited ? '已修改' : '原始版本';
-    badge.classList.toggle('edited', edited);
-  }
-
-  function renderFanLoveVariantEditors() {
-    els.fanLoveVariantPromptGrid.innerHTML = '';
-    state.fanLoveVariants.forEach((assembly, index) => {
-      const variantId = assembly.variant.id;
-      const card = element('article', 'variant-prompt-card');
-      card.dataset.fanLoveVariant = variantId;
-
-      const header = element('div', 'variant-prompt-card-header');
-      const titleWrap = element('div', 'variant-prompt-title');
-      titleWrap.appendChild(element('div', 'section-kicker', `STYLE ${String(index + 1).padStart(2, '0')}`));
-      titleWrap.appendChild(element('h3', '', assembly.variant.label));
-      titleWrap.appendChild(element('span', 'run-badge', `生产权重 ${Math.round(assembly.variant.weight * 100)}%`));
-      const badge = element('span', 'edit-badge', '原始版本');
-      badge.dataset.fanLoveEditedBadge = variantId;
-      header.appendChild(titleWrap);
-      header.appendChild(badge);
-      card.appendChild(header);
-
-      const promptPair = element('div', 'variant-prompt-pair');
-      const originalColumn = element('label', 'field variant-prompt-column');
-      originalColumn.appendChild(element('span', '', '原始提示词'));
-      const original = element('pre', 'variant-original-prompt', assembly.prompt);
-      originalColumn.appendChild(original);
-      const editedColumn = element('label', 'field variant-prompt-column');
-      editedColumn.appendChild(element('span', '', '当前可编辑版本'));
-      const editor = element('textarea', 'variant-prompt-editor');
-      editor.dataset.fanLovePrompt = variantId;
-      editor.rows = 18;
-      editor.spellcheck = false;
-      editor.value = state.fanLoveVariantEdits[variantId] || assembly.prompt;
-      editedColumn.appendChild(editor);
-      promptPair.appendChild(originalColumn);
-      promptPair.appendChild(editedColumn);
-      card.appendChild(promptPair);
-
-      const actions = element('div', 'variant-prompt-actions');
-      const meta = element('span', 'meta', `${assembly.sources.length} 条 Post ｜ ${assembly.allowedPostIds.join(', ') || '无证据'}`);
-      const button = element('button', 'card-generate', '用当前版本生成');
-      button.type = 'button';
-      button.dataset.fanLoveGenerateVariant = variantId;
-      actions.appendChild(meta);
-      actions.appendChild(button);
-      card.appendChild(actions);
-
-      const result = element('div', 'variant-prompt-result');
-      result.dataset.fanLoveVariantResult = variantId;
-      const previousResult = state.fanLoveVariantResults[variantId];
-      if (previousResult) renderFanLoveResult(result, previousResult, assembly);
-      else result.appendChild(element('div', 'experiment-state', '还没有生成结果。'));
-      card.appendChild(result);
-      els.fanLoveVariantPromptGrid.appendChild(card);
-    });
-  }
-
-  async function assembleFanLoveVariants() {
+  async function assembleFanLovePrompt() {
     showError(els.fanLoveError, '');
-    const input = collectFanLoveInput();
-    const assemblies = await Promise.all(FAN_LOVE_VARIANT_IDS.map(async (variantId) => {
-      const data = await postJson('/api/fan-love/assemble', { input: { ...input, variantId } });
-      return data.assembly;
-    }));
-    state.fanLoveVariants = assemblies;
-    state.fanLoveAssembly = assemblies[0] || null;
-    state.fanLoveSelectedVariantId = state.fanLoveSelectedVariantId || assemblies[0]?.variant.id || '';
-    state.fanLoveVariantResults = {};
-    state.fanLoveVariantEdits = Object.fromEntries(assemblies.map((assembly) => [assembly.variant.id, assembly.prompt]));
-    els.fanLovePromptBadge.textContent = `${assemblies.length} 种风格已组装`;
-    els.fanLoveMeta.textContent = `${assemblies[0]?.sources.length || 0} 条 Post ｜ 每张卡都可独立修改后生成`;
-    els.fanLoveOutput.innerHTML = '<div class="experiment-state">四种风格 Prompt 已组装。现在可以直接改卡片里的当前版本。</div>';
-    renderFanLoveVariantEditors();
-    return assemblies;
+    const data = await postJson('/api/fan-love/assemble', { input: collectFanLoveInput() });
+    state.fanLoveAssembly = data.assembly;
+    els.fanLovePrompt.value = data.assembly.prompt;
+    els.fanLovePromptBadge.textContent = `${data.assembly.variant.label} · ${Math.round(data.assembly.variant.weight * 100)}%`;
+    els.fanLoveMeta.textContent = `${data.assembly.sources.length} 条 Post ｜ ${data.assembly.allowedPostIds.join(', ')} ｜ production: ${data.assembly.generation.maxTokens} tokens / temp ${data.assembly.generation.temperature}`;
+    return data.assembly;
   }
 
   function renderFanLoveResult(container, result, assembly) {
@@ -496,7 +416,7 @@
         card.appendChild(element('p', 'fan-love-text', value.reason || '素材不足'));
       } else {
         card.appendChild(element('p', 'fan-love-text', value.text));
-        card.appendChild(element('div', 'meta result-meta', `evidence: ${(value.evidencePostIds || []).join(', ')}`));
+        card.appendChild(element('div', 'meta result-meta', `evidence: ${(value.evidencePostIds || []).join(', ')} ｜ multiple: ${String(value.basedOnMultiplePosts)}`));
       }
       card.appendChild(element('div', 'contract-pass', '✓ 已通过生产 fanLoveWritingContract 输出校验'));
       container.appendChild(card);
@@ -509,44 +429,42 @@
     container.appendChild(element('div', 'meta result-meta', `${assembly?.variant?.label || ''} ｜ ${usageMeta(result?.response)}`));
   }
 
-  async function generateFanLoveVariant(variantId) {
+  async function generateFanLove() {
     showError(els.fanLoveError, '');
     if (!els.fanLoveApiKey.value.trim()) { showError(els.fanLoveError, '请先填写硅基流动 API Key'); els.fanLoveApiKey.focus(); return; }
-    const assembly = state.fanLoveVariants.find((item) => item.variant.id === variantId);
-    if (!assembly) {
-      await assembleFanLoveVariants();
-      return generateFanLoveVariant(variantId);
-    }
-    const card = fanLoveVariantCard(variantId);
-    const button = card?.querySelector('[data-fan-love-generate-variant]');
-    const resultContainer = card?.querySelector('[data-fan-love-variant-result]');
-    const idle = button?.textContent || '用当前版本生成';
-    if (button) { button.disabled = true; button.textContent = '生成中…'; }
-    if (resultContainer) resultContainer.innerHTML = '<div class="experiment-state">正在调用 DeepSeek V3.2，并按生产合同解析…</div>';
+    const button = els.fanLoveGenerateBtn; const idle = button.textContent; button.disabled = true; button.textContent = '生成中…';
+    els.fanLoveOutput.innerHTML = '<div class="experiment-state">正在调用 DeepSeek V3.2，并按生产合同解析…</div>';
     try {
+      const assembly = state.fanLoveAssembly || await assembleFanLovePrompt();
       const data = await postJson('/api/fan-love/generate', {
-        apiKey: els.fanLoveApiKey.value.trim(), prompt: state.fanLoveVariantEdits[variantId] || assembly.prompt, assembly,
+        apiKey: els.fanLoveApiKey.value.trim(), prompt: els.fanLovePrompt.value, assembly,
         maxTokens: Number(els.fanLoveMaxTokens.value) || 520, temperature: Number(els.fanLoveTemperature.value),
       });
-      state.fanLoveVariantResults[variantId] = data.result;
-      if (resultContainer) renderFanLoveResult(resultContainer, data.result, data.assembly);
-      els.fanLoveOutput.innerHTML = `<div class="experiment-state">${assembly.variant.label} 已使用当前编辑版本生成。</div>`;
+      renderFanLoveResult(els.fanLoveOutput, data.result, data.assembly);
     } catch (error) { showError(els.fanLoveError, error.message || '粉丝爱意生成失败'); }
-    finally { if (button) { button.disabled = false; button.textContent = idle; } }
-  }
-
-  async function generateFanLove() {
-    const variantId = state.fanLoveSelectedVariantId || state.fanLoveVariants[0]?.variant.id;
-    if (variantId) await generateFanLoveVariant(variantId);
+    finally { button.disabled = false; button.textContent = idle; }
   }
 
   async function runFanLoveVariants() {
     showError(els.fanLoveError, '');
     if (!els.fanLoveApiKey.value.trim()) { showError(els.fanLoveError, '请先填写硅基流动 API Key'); els.fanLoveApiKey.focus(); return; }
     const button = els.fanLoveRunVariantsBtn; const idle = button.textContent; button.disabled = true; button.textContent = '四风格生成中…';
+    els.fanLoveVariantResults.innerHTML = '<div class="empty-state">同一组 Profile / Post 正在并行跑四套生产 Prompt…</div>';
     try {
-      if (!state.fanLoveVariants.length) await assembleFanLoveVariants();
-      await Promise.all(state.fanLoveVariants.map((assembly) => generateFanLoveVariant(assembly.variant.id)));
+      const data = await postJson('/api/fan-love/run-variants', {
+        apiKey: els.fanLoveApiKey.value.trim(), input: collectFanLoveInput(),
+        maxTokens: Number(els.fanLoveMaxTokens.value) || 520, temperature: Number(els.fanLoveTemperature.value),
+      });
+      els.fanLoveVariantResults.innerHTML = '';
+      (data.results || []).forEach((item) => {
+        const card = element('article', 'variant-card');
+        card.appendChild(element('span', 'run-badge', `${item.assembly.variant.label} · ${Math.round(item.assembly.variant.weight * 100)}%`));
+        card.appendChild(element('h3', '', item.assembly.variant.label));
+        const output = element('div', 'variant-result'); renderFanLoveResult(output, item.result, item.assembly); card.appendChild(output);
+        const details = element('details', 'prompt-disclosure'); details.appendChild(element('summary', '', '查看本风格生产 Prompt'));
+        details.appendChild(element('pre', '', item.assembly.prompt)); card.appendChild(details);
+        els.fanLoveVariantResults.appendChild(card);
+      });
     } catch (error) { showError(els.fanLoveError, error.message || '四风格测试失败'); }
     finally { button.disabled = false; button.textContent = idle; }
   }
@@ -586,10 +504,9 @@
     showError(els.personaMailError, '');
     const data = await postJson('/api/persona-mail/assemble', { input: collectPersonaInput() });
     state.personaMailAssembly = data.assembly;
-    els.personaMailOriginalPrompt.textContent = data.assembly.prompt;
     els.personaMailPrompt.value = data.assembly.prompt;
-    els.personaMailPromptBadge.textContent = `${data.assembly.persona.displayName} · ${data.assembly.scenario.label}`;
-    els.personaMailMeta.textContent = `${data.assembly.scenario.label} ｜ ${data.assembly.relationship.privateTurns.length} turns ｜ ${data.assembly.recentPost ? '含 recent public post' : '无 public post'} ｜ private extension: ${data.assembly.persona.privateExtension ? 'yes' : 'no'} ｜ production: ${data.assembly.generation.maxTokens} / temp ${data.assembly.generation.temperature}`;
+    els.personaMailPromptBadge.textContent = `${data.assembly.persona.displayName} · ${data.assembly.relationship.privateTurns.length} turns`;
+    els.personaMailMeta.textContent = `${data.assembly.relationship.privateTurns.length ? '已有私聊关系' : '无私聊历史'} ｜ ${data.assembly.recentPost ? '含 recent public post' : '无 public post'} ｜ private extension: ${data.assembly.persona.privateExtension ? 'yes' : 'no'} ｜ production: ${data.assembly.generation.maxTokens} / temp ${data.assembly.generation.temperature}`;
     return data.assembly;
   }
 
@@ -652,24 +569,9 @@
       loadingText: 'A–E 生成中…', emptyText: '正在并行生成 Type A、B、C、D、E…', restoreText: '一键跑 A–E' }));
 
     els.fanLoveSampleSelect.addEventListener('change', () => applyFanLoveRealSample(els.fanLoveSampleSelect.value).catch((error) => showError(els.fanLoveError, error.message)));
-    els.fanLoveAssembleBtn.addEventListener('click', () => assembleFanLoveVariants().catch((error) => showError(els.fanLoveError, error.message)));
+    els.fanLoveAssembleBtn.addEventListener('click', () => assembleFanLovePrompt().catch((error) => showError(els.fanLoveError, error.message)));
     els.fanLoveGenerateBtn.addEventListener('click', generateFanLove);
     els.fanLoveRunVariantsBtn.addEventListener('click', runFanLoveVariants);
-    els.fanLoveVariantPromptGrid.addEventListener('input', (event) => {
-      const editor = event.target.closest('[data-fan-love-prompt]');
-      if (!editor) return;
-      const variantId = editor.dataset.fanLovePrompt;
-      state.fanLoveSelectedVariantId = variantId;
-      state.fanLoveVariantEdits[variantId] = editor.value;
-      updateFanLoveVariantBadge(variantId);
-    });
-    els.fanLoveVariantPromptGrid.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-fan-love-generate-variant]');
-      if (!button) return;
-      const variantId = button.dataset.fanLoveGenerateVariant;
-      state.fanLoveSelectedVariantId = variantId;
-      generateFanLoveVariant(variantId).catch((error) => showError(els.fanLoveError, error.message));
-    });
     els.personaMailSampleSelect.addEventListener('change', () => applyPersonaMailRealSample(els.personaMailSampleSelect.value).catch((error) => showError(els.personaMailError, error.message)));
     els.personaMailAssembleBtn.addEventListener('click', () => assemblePersonaMailPrompt().catch((error) => showError(els.personaMailError, error.message)));
     els.personaMailGenerateBtn.addEventListener('click', generatePersonaMail);
