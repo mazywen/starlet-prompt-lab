@@ -248,7 +248,7 @@ async function generateFanLove(payload, assembly) {
     apiKey: payload.apiKey,
     messages: [{ role: 'user', content: prompt }],
     maxTokens: assembly.generation.maxTokens,
-    temperature: assembly.generation.temperature,
+    temperature: payload.temperature ?? assembly.generation.temperature,
     responseFormat: assembly.responseFormat,
   });
   try {
@@ -264,7 +264,7 @@ async function generatePersonaMail(payload, assembly) {
     apiKey: payload.apiKey,
     messages: [{ role: 'user', content: prompt }],
     maxTokens: assembly.generation.maxTokens,
-    temperature: assembly.generation.temperature,
+    temperature: payload.temperature ?? assembly.generation.temperature,
     responseFormat: assembly.responseFormat,
   });
   try {
@@ -1438,7 +1438,7 @@ function normalizeFanLoveSources(value) {
       seenIds.add(item.id);
       return true;
     })
-    .slice(0, 4);
+    .slice(0, 3);
 }
 
 function normalizeFanLoveProfile(input = {}) {
@@ -1462,7 +1462,7 @@ function assembleFanLove(input = {}) {
     throw error;
   }
   if (!sources.length) {
-    const error = new Error('粉丝爱意测试至少需要 1 条 Post，最多 4 条');
+    const error = new Error('粉丝爱意测试至少需要 1 条 Post，最多 3 条');
     error.code = 'FAN_LOVE_SOURCE_REQUIRED';
     throw error;
   }

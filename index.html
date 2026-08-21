@@ -132,11 +132,11 @@
 
   <section id="fanLoveLabPanel" class="lab-panel" data-panel-name="fan-love">
     <div class="panel-toolbar">
-      <div><strong>粉丝爱意 · Post 触发写信</strong><span>输入 Profile + 最近 1–4 条真实 Post；随机风格按生产权重 20 / 40 / 20 / 20。</span></div>
+      <div><strong>粉丝爱意 · Profile 周期扫描</strong><span>输入当前 Profile + 最近 3 条真实 Post；随机风格按生产权重 20 / 40 / 20 / 20。</span></div>
       <div class="experiment-actions">
-        <button id="fanLoveAssembleBtn" type="button">组装 Prompt</button>
-        <button id="fanLoveGenerateBtn" type="button" class="primary">生成当前风格</button>
-        <button id="fanLoveRunVariantsBtn" type="button">一键跑四风格</button>
+        <button id="fanLoveAssembleBtn" type="button">组装四个版本</button>
+        <button id="fanLoveGenerateBtn" type="button" class="primary">生成当前版本</button>
+        <button id="fanLoveRunVariantsBtn" type="button">生成四个版本</button>
       </div>
     </div>
     <main class="letter-lab-shell">
@@ -151,13 +151,12 @@
           <label class="field"><span>display_name · 用户昵称</span><input id="fanLoveDisplayName" /></label>
         </section>
         <section class="lab-block">
-          <div class="section-kicker">03 / RECENT 1–4 POSTS</div>
-          <p class="field-note">真实生产只会取当前 Profile 下最近 1–4 条合格 Post。留空的行会被忽略。</p>
+          <div class="section-kicker">03 / RECENT 3 POSTS</div>
+          <p class="field-note">真实生产只会取当前 Profile 下最新 3 条合格 Post。留空的行会被忽略；事件上下文和图片识别结果会随对应 Post 一起注入。</p>
           <div class="post-input-list">
             <div class="post-input"><input id="fanLovePostId1" aria-label="Post 1 ID" /><textarea id="fanLovePost1" rows="4"></textarea></div>
             <div class="post-input"><input id="fanLovePostId2" aria-label="Post 2 ID" /><textarea id="fanLovePost2" rows="4"></textarea></div>
             <div class="post-input"><input id="fanLovePostId3" aria-label="Post 3 ID" /><textarea id="fanLovePost3" rows="3"></textarea></div>
-            <div class="post-input"><input id="fanLovePostId4" aria-label="Post 4 ID" /><textarea id="fanLovePost4" rows="3"></textarea></div>
           </div>
         </section>
         <section class="lab-block">
@@ -165,7 +164,7 @@
           <label class="field"><span>写信风格</span><select id="fanLoveVariant"><option value="">随机（生产权重）</option><option value="energetic">元气应援型 · 40%</option><option value="restrained">克制深情型 · 20%</option><option value="gentle">温柔守护型 · 20%</option><option value="shy">忐忑心动型 · 20%</option></select></label>
           <label class="field"><span>随机 Seed</span><input id="fanLoveSeed" value="fan-love-lab-001" /></label>
           <label class="field"><span>API Key（仅本次请求）</span><input id="fanLoveApiKey" type="password" autocomplete="off" placeholder="粘贴硅基流动 API Key" /></label>
-          <p class="field-note">模型参数由 1.7 生产合同固定，组装结果会显示当前值。</p>
+          <p class="field-note">四个版本的 Prompt 与 temperature 会在右侧同时展开；每张卡都可直接修改后生成。</p>
           <div id="fanLoveError" class="error hidden" role="alert"></div>
         </section>
       </aside>
@@ -179,11 +178,12 @@
         </section>
         <section class="prompt-workbench letter-workbench">
           <div class="result-heading">
-            <div><div class="section-kicker">PRODUCTION PROMPT</div><h2>当前粉丝爱意 Prompt</h2></div>
+            <div><div class="section-kicker">FOUR EDITABLE PROMPTS</div><h2>四个版本的生产 Prompt</h2></div>
             <span id="fanLovePromptBadge" class="run-badge">尚未组装</span>
           </div>
-          <p class="field-note">生产 worker 将整份 Prompt 作为单条 user message 发送。你可直接编辑后生成；解析仍使用生产合同。</p>
-          <label class="field"><span>完整 Prompt（可编辑）</span><textarea id="fanLovePrompt" class="mono-editor" rows="28"></textarea></label>
+          <p class="field-note">每张卡的 Prompt 都是当前输入拼接后的完整 user message。修改后点击卡片内“用此 Prompt 生成”，输出仍使用生产合同解析。</p>
+          <div id="fanLovePromptVariants" class="variant-prompt-grid"><div class="empty-state">点击“组装四个版本”后显示四套完整 Prompt。</div></div>
+          <label class="field selected-prompt-fallback"><span>当前选中版本 Prompt（兼容预览）</span><textarea id="fanLovePrompt" class="mono-editor" rows="8"></textarea></label>
           <div id="fanLoveMeta" class="meta"></div>
           <div id="fanLoveOutput" class="letter-output"><div class="experiment-state">组装 Prompt 后可直接生成。</div></div>
         </section>
@@ -226,7 +226,7 @@
         <section class="lab-block">
           <div class="section-kicker">04 / GENERATION</div>
           <label class="field"><span>API Key（仅本次请求）</span><input id="personaMailApiKey" type="password" autocomplete="off" placeholder="粘贴硅基流动 API Key" /></label>
-          <p class="field-note">模型参数由 1.7 生产合同固定，组装结果会显示当前值。</p>
+          <label class="field"><span>Temperature（可修改）</span><input id="personaMailTemperature" type="number" min="0" max="2" step="0.01" value="0.4" /></label>
           <div id="personaMailError" class="error hidden" role="alert"></div>
         </section>
       </aside>
@@ -243,7 +243,7 @@
             <div><div class="section-kicker">PRODUCTION PROMPT</div><h2>当前人设来信 Prompt</h2></div>
             <span id="personaMailPromptBadge" class="run-badge">尚未组装</span>
           </div>
-          <p class="field-note">生产 worker 同样把整份 Prompt 作为单条 user message 发送；最终输出必须通过 title / preview / 2–5 段正文 / signature 的严格合同。</p>
+          <p class="field-note">生产 worker 同样把整份 Prompt 作为单条 user message 发送。你可以直接修改拼接后的 Prompt 和 temperature；最终输出必须通过 title / preview / 2–5 段正文 / signature 的严格合同。</p>
           <label class="field"><span>完整 Prompt（可编辑）</span><textarea id="personaMailPrompt" class="mono-editor" rows="32"></textarea></label>
           <div id="personaMailMeta" class="meta"></div>
           <div id="personaMailOutput" class="letter-output"><div class="experiment-state">组装 Prompt 后可直接生成。</div></div>
