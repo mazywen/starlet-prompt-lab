@@ -161,6 +161,23 @@ button:disabled { opacity: .55; cursor: wait; }
 .variant-card details { margin-top: 12px; }
 .variant-card pre { max-height: 280px; overflow: auto; padding: 10px; background: #f6f0e7; white-space: pre-wrap; font: 10px/1.55 var(--mono); }
 .variants-section { margin-top: 28px; }
+.variant-prompt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.variant-prompt-card { min-width: 0; padding: 18px; border: 1px solid var(--line); background: var(--surface); box-shadow: 4px 4px 0 #e5d9ca; }
+.variant-prompt-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.variant-prompt-title { min-width: 0; display: grid; gap: 5px; }
+.variant-prompt-title h3 { margin: 0; font: 600 20px/1.25 var(--serif); }
+.variant-prompt-title .run-badge { width: fit-content; }
+.edit-badge { flex: 0 0 auto; padding: 5px 8px; border: 1px solid var(--line); color: var(--muted); font: 10px/1 var(--mono); }
+.edit-badge.edited { border-color: #9b6c3b; color: #8b5d31; background: #fff1df; }
+.variant-prompt-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.variant-prompt-column { min-width: 0; }
+.variant-original-prompt, .variant-prompt-editor { box-sizing: border-box; width: 100%; min-height: 320px; margin: 8px 0 0; padding: 12px; border: 1px solid var(--line); background: #f6f0e7; white-space: pre-wrap; overflow: auto; font: 10px/1.6 var(--mono); }
+.variant-original-prompt { max-height: 420px; }
+.variant-prompt-editor { display: block; resize: vertical; color: var(--ink); }
+.variant-prompt-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.variant-prompt-actions .meta { min-width: 0; overflow-wrap: anywhere; }
+.variant-prompt-result { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.original-prompt-disclosure pre { max-height: 520px; }
 code { font-family: var(--mono); font-size: .92em; }
 
 @media (max-width: 980px) {
@@ -170,6 +187,7 @@ code { font-family: var(--mono); font-size: .92em; }
   .panel-toolbar { align-items: flex-start; flex-direction: column; padding-left: 20px; padding-right: 20px; }
   .lab-tabs { justify-content: flex-start; }
   .experiment-card, .prompt-grid, .prompt-pair, .real-baseline-grid { grid-template-columns: 1fr; }
+  .variant-prompt-grid, .variant-prompt-pair { grid-template-columns: 1fr; }
   .experiment-variables { border-right: 0; border-bottom: 1px solid var(--line); }
 }
 
@@ -177,7 +195,7 @@ code { font-family: var(--mono); font-size: .92em; }
   .event-lab-header, .comparison-stage, .event-control-rail { padding-left: 14px; padding-right: 14px; }
   .experiment-actions, .inline-actions { width: 100%; }
   .experiment-actions button, .inline-actions button { flex: 1 1 140px; }
-  .parameter-pair, .variant-grid { grid-template-columns: 1fr; }
+  .parameter-pair, .variant-grid, .variant-prompt-grid { grid-template-columns: 1fr; }
   .prompt-workbench, .baseline-output { padding: 16px; box-shadow: 5px 5px 0 #d9ccba; }
   .panel-toolbar { padding-left: 14px; padding-right: 14px; }
 }
