@@ -167,7 +167,6 @@
         </section>
         <section class="lab-block">
           <div class="section-kicker">04 / STYLE & GENERATION</div>
-          <label class="field"><span>写信风格</span><select id="fanLoveVariant"><option value="">随机（生产权重）</option><option value="energetic">元气应援型 · 40%</option><option value="restrained">克制深情型 · 20%</option><option value="gentle">温柔守护型 · 20%</option><option value="shy">忐忑心动型 · 20%</option></select></label>
           <label class="field"><span>随机 Seed</span><input id="fanLoveSeed" value="fan-love-lab-001" /></label>
           <label class="field"><span>API Key（仅本次请求）</span><input id="fanLoveApiKey" type="password" autocomplete="off" placeholder="粘贴硅基流动 API Key" /></label>
           <div class="parameter-pair">
@@ -187,17 +186,13 @@
         </section>
         <section class="prompt-workbench letter-workbench">
           <div class="result-heading">
-            <div><div class="section-kicker">PRODUCTION PROMPT</div><h2>当前粉丝爱意 Prompt</h2></div>
+            <div><div class="section-kicker">FOUR EDITABLE PROMPTS</div><h2>四种粉丝爱意风格</h2></div>
             <span id="fanLovePromptBadge" class="run-badge">尚未组装</span>
           </div>
-          <p class="field-note">生产 worker 将整份 Prompt 作为单条 user message 发送。你可直接编辑后生成；解析仍使用生产合同。</p>
-          <label class="field"><span>完整 Prompt（可编辑）</span><textarea id="fanLovePrompt" class="mono-editor" rows="28"></textarea></label>
+          <p class="field-note">四张卡都展示原始生产 Prompt。直接改“当前生效版本”，单卡生成或一键生成四种风格；解析仍使用生产合同。</p>
+          <div id="fanLoveVariantPromptGrid" class="variant-prompt-grid"></div>
           <div id="fanLoveMeta" class="meta"></div>
           <div id="fanLoveOutput" class="letter-output"><div class="experiment-state">组装 Prompt 后可直接生成。</div></div>
-        </section>
-        <section class="variants-section">
-          <div class="result-heading"><div><div class="section-kicker">FOUR VARIANTS</div><h2>同输入四风格横向对比</h2></div></div>
-          <div id="fanLoveVariantResults" class="variant-grid"><div class="empty-state">点击“一键跑四风格”后，在这里并排比较四套生产 Prompt 的结果。</div></div>
         </section>
       </section>
     </main>
@@ -255,6 +250,7 @@
             <span id="personaMailPromptBadge" class="run-badge">尚未组装</span>
           </div>
           <p class="field-note">生产 worker 同样把整份 Prompt 作为单条 user message 发送；最终输出必须通过 title / preview / 2–5 段正文 / signature 的严格合同。</p>
+          <details class="prompt-disclosure original-prompt-disclosure"><summary>查看原始组装 Prompt</summary><pre id="personaMailOriginalPrompt"></pre></details>
           <label class="field"><span>完整 Prompt（可编辑）</span><textarea id="personaMailPrompt" class="mono-editor" rows="32"></textarea></label>
           <div id="personaMailMeta" class="meta"></div>
           <div id="personaMailOutput" class="letter-output"><div class="experiment-state">组装 Prompt 后可直接生成。</div></div>
